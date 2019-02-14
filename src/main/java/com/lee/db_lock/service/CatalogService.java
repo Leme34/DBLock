@@ -65,7 +65,7 @@ public class CatalogService {
         Browse browse = Browse.builder().cataId(catalog.getId()).user(user).build();
         browseService.save(browse);  //TODO 获取锁失败的记录不能回滚
         //3、乐观锁更新此商品的浏览次数
-        //乐观锁方式1的写法(获取乐观锁失败不能抛出异常)
+        //乐观锁方式1的写法(此方式获取乐观锁失败时不能抛出异常)
 //        int result = catalogRepository.updateCatalogWithVersion(catalogId,catalog.getBrowseCount() + 1,catalog.getVersion());
 //        if (result == 0) {
 //            log.error("server is busy, version={},result={}", catalog.getVersion(), "失败");
