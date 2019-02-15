@@ -21,7 +21,8 @@ public class CatalogService {
     private BrowseService browseService;
 
     /**
-     * 读取浏览次数采用悲观锁，更新浏览次数不加锁，线程安全无需重试
+     * 读取浏览次数采用悲观锁（写锁），更新浏览次数不加锁
+     * 每次都必须等待其他线程释放读/写锁，才能获取写锁去读取此商品，线程安全无需重试
      *
      * @param catalogId 商品id
      * @param user      浏览的用户
@@ -30,8 +31,8 @@ public class CatalogService {
     public void browseCatalog(Long catalogId, String user) {
         //1、读取此商品
         //悲观锁读取
-        Optional<Catalog>  catalogOptional = catalogRepository.findCatalogForUpdate(catalogId);
-//        Optional<Catalog>  catalogOptional = catalogRepository.findCatalogWithPessimisticLock(catalogId);
+//        Optional<Catalog>  catalogOptional = catalogRepository.findCatalogForUpdate(catalogId);
+        Optional<Catalog> catalogOptional = catalogRepository.findCatalogWithPessimisticLock(catalogId);
         if (!catalogOptional.isPresent()) {
             throw new RuntimeException("不存在该商品!");
         }
@@ -61,10 +62,13 @@ public class CatalogService {
             log.error("不存在该商品!");
         }
         Catalog catalog = catalogOptional.get();
-        //2、新增浏览记录
-        Browse browse = Browse.builder().cataId(catalog.getId()).user(user).build();
-        browseService.save(browse);  //TODO 获取锁失败的记录不能回滚
+
+        //2、新增浏览记录 TODO 获取乐观锁失败时写入的浏览记录不能回滚,因此考虑在步骤3重试成功后新增浏览记录
+//        Browse browse = Browse.builder().cataId(catalog.getId()).user(user).build();
+//        browseService.save(browse);
+
         //3、乐观锁更新此商品的浏览次数
+
         //乐观锁方式1的写法(此方式获取乐观锁失败时不能抛出异常)
 //        int result = catalogRepository.updateCatalogWithVersion(catalogId,catalog.getBrowseCount() + 1,catalog.getVersion());
 //        if (result == 0) {

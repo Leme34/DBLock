@@ -21,7 +21,7 @@ public interface CatalogRepository extends CrudRepository<Catalog, Long> {
     Optional<Catalog> findCatalogForUpdate(@Param("id") Long id);
 
     /**
-     * 悲观锁方式2：非原生SQL,使用jpa的@Lock注解,设置悲观写锁。
+     * 悲观锁方式2：非原生SQL,使用jpa的@Lock注解,设置悲观写锁（排他锁）。
      * where条件一定要涉及到数据库对应的索引字段，这样才会是行级锁
      */
     @Lock(value = LockModeType.PESSIMISTIC_WRITE) //此处代表行级锁
