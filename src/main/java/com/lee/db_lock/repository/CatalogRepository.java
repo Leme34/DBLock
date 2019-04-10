@@ -15,6 +15,7 @@ public interface CatalogRepository extends CrudRepository<Catalog, Long> {
 
     /**
      * 悲观锁方式1：自行写原生SQL,然后写上for update语句
+     * 一定要加上索引字段的where条件才会是行级锁，否则是表级锁
      */
     @Query(value = "select * from Catalog where id = :id for update",
             nativeQuery = true)
@@ -22,7 +23,7 @@ public interface CatalogRepository extends CrudRepository<Catalog, Long> {
 
     /**
      * 悲观锁方式2：非原生SQL,使用jpa的@Lock注解,设置悲观写锁（排他锁）。
-     * where条件一定要涉及到数据库对应的索引字段，这样才会是行级锁
+     * 一定要加上索引字段的where条件才会是行级锁，否则是表级锁
      */
     @Lock(value = LockModeType.PESSIMISTIC_WRITE) //此处代表行级锁
     @Query(value = "select c from Catalog c where c.id = :id")  //非原生SQL此处的Catalog是entity
